@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rotate Vinyl</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .backImg,
+        body {
+            background-repeat: no-repeat;
+            background-size: cover;
+            backdrop-filter: blur(20px);
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        }
+
+        body {
+            background-size: 250% 250%;
+            animation: gradient 110s ease infinite;
+            height: 100vh;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+
+        .vinylSheet {
+            margin: 0px I !important;
+            border: none;
+            padding: 0px !important;
+            animation: rotate 8s linear infinite;
+            background-color: rgb(56, 56, 56);
+            max-width: 35rem;
+        }
+
+        .vinylSheet img {
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+
+    <div style="height:100vh;" class="container d-flex overflow-hidden justify-content-center align-items-center">
+
+        <div class="card  bg-transparent border-0 position-relative rounded" style="max-width: 28em;">
+
+            <div class="card shadow-lg rounded-circle overflow-hidden position-relative vinylSheet">
+
+                <img class="m-0 p-0" src="./download_enhanced.png" alt="">
+                <div class="position-absolute" style="top: 50%;left: 50%;transform: translate(-50%,-50%);">
+                    <span class="backImg btn btn-primary rounded-circle"
+                        style="transform: rotate(180deg);width:11rem;height:11rem;background-size: cover;background-repeat: no-repeat;"></span>
+                </div>
+            </div>
+            <div class="card shadow-lg p-0 m-0 position-absolute bg-transparent"
+                style="max-width:40rem;width:100%!important;height:100%;left: -50%;border-top-left-radius: 15px;border-bottom-left-radius: 15px;">
+                <span class="backImg"
+                    style="border-top-left-radius: 15px;border-bottom-left-radius: 15px;width:100%;height:100%;background-size: cover;background-repeat: no-repeat;"></span>
+            </div>
+            <button onclick="playVideo()" id="playsongs" class="position-absolute btn fs-1 text-light border-0"
+                style="top: 50%;transform: translateY(-50%);outline: none;"><i class="bi bi-play-circle"></i></button>
+        </div>
+    </div>
+
+
+    <!-- 1. Your input URL -->
+    <input type="text" id="yt-url" placeholder="Paste YouTube link here" style="width: 400px;"
+        value="https://www.youtube.com/watch?v=w_OzrsE35qQ" />
+    <button id="embed-btn">Embed Video</button>
+
+    <!-- 2. Container for the generated iframe -->
+    <div id="yt-embed-holder" style="margin-top: 1em;display: nsone;"></div>
+
+    <script>
+        /**
+         * Given a full YouTube URL, extract the v, list, and index params.
+         * Returns an object { videoId, listId, index }.
+         */
+        function parseYouTubeURL(url) {
+
+            try {
+                const u = new URL(url.trim());
+                setBackground(u.searchParams.get('v'))
+                return {
+                    videoId: u.searchParams.get('v'),
+                    listId: u.searchParams.get('list'),   // may be null
+                    index: u.searchParams.get('index')   // may be null
+                };
+            } catch (err) {
+                console.error('Invalid URL:', err);
+                return {};
+            }
+        }
+
+        /**
+         * Builds the embed src string for autoplay, looping,
+         * muting (required for autoplay), and optional playlist/index.
+         */
+        function buildEmbedSrc({ videoId, listId, index }) {
+            if (!videoId) return '';
+            const params = new URLSearchParams({
+                autoplay: '1',
+                mute: '0',
+                loop: listId ? '1' : '0',
+                controls: '1',
+                modestbranding: '1',
+                rel: '0',
+                playsinline: '1'
+            });
+            // If there's a playlist, loop needs playlist=ID
+            if (listId) {
+                params.set('list', listId);
+                // YouTube ignores `index` in embeds, but you can supply it
+                if (index) params.set('index', index);
+            }
+            return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+        }
+
+        document.getElementById('embed-btn').addEventListener('click', () => {
+            const url = document.getElementById('yt-url').value;
+            const { videoId, listId, index } = parseYouTubeURL(url);
+            if (!videoId) {
+                alert('Could not parse a video ID from that URL.');
+                return;
+            }
+
+            // Create or replace the iframe
+            const holder = document.getElementById('yt-embed-holder');
+            holder.innerHTML = ''; // clear previous
+            const iframe = document.createElement('iframe');
+            iframe.width = 560;
+            iframe.height = 315;
+            iframe.src = buildEmbedSrc({ videoId, listId, index });
+            iframe.frameBorder = 0;
+            iframe.allow =
+                'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+            iframe.allowFullscreen = true;
+            iframe.title = 'YouTube video player';
+
+            holder.appendChild(iframe);
+        });
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function setBackground(urlId) {
+            let ytid = urlId
+            console.clear()
+            console.log(ytid)
+
+            let backImg = document.getElementsByClassName("backImg");
+            backImg[0].style.backgroundImage = "url('https://i.ytimg.com/vi/" + ytid + "/maxresdefault.jpg')";
+            backImg[1].style.backgroundImage = "url('https://i.ytimg.com/vi/" + ytid + "/maxresdefault.jpg')";
+            document.body.style.backgroundImage = "url('https://i.ytimg.com/vi/" + ytid + "/maxresdefault.jpg')";
+        }
+    </script>
+
+    <script>
+        var player;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtube-player');
+        }
+
+        function playVideo() {
+            player.playVideo();
+        }
+
+        function pauseVideo() {
+            player.pauseVideo();
+        }
+
+        // Load YouTube Iframe API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+
+</body>
+
+</html>
